@@ -28,7 +28,8 @@ app.get('/api/data', (req, res) => {
             console.error('Error executing query:', err);
             res.status(500).json({ error: 'Internal Server Error' });
         } else {
-            res.json(results);
+            const reversedResults = results.reverse();
+            res.json(reversedResults);
         }
     });
 });
