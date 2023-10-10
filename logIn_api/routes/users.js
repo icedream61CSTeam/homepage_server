@@ -33,6 +33,8 @@ router.post('/register', function (req, res, next) {
   connection.query(sql, function (error, results, fields) {
     if (error) throw error;
     if (results.length == 0) {
+      console.log("username(注册)  " + username);
+      console.log("password(注册)  " + password);
       var hash = crypto.createHash('md5').update(password + username + 'cbzz!').digest('hex');
       var insertSql = `insert into profile (\`nickname\`, \`password\`) values ('${username}', '${hash}')`;
       connection.query(insertSql, function (err2, res2) {
@@ -44,7 +46,7 @@ router.post('/register', function (req, res, next) {
         }
       });
     } else {
-      console.log(`has one: ${results[0]["password"]}`);
+      console.log(`重复的密码: ${results[0]["password"]}`);
       res.send('already has this nickname.');
     }
   });
@@ -53,31 +55,25 @@ router.post('/register', function (req, res, next) {
 router.post('/login', function (req, res, next) {
   const { username, password } = req.body;
 
-  global.username1 = username;
-
   var sql = `select * from profile where nickname = '${username}'`;
   connection.query(sql, function (error, results, fields) {
     if (error) throw error;
     if (results.length == 0) {
       res.send('no this nickname.');
     } else if (results.length == 1) {
+      console.log("username(登录)  " + username);
+      console.log("password(登录)  " + password);
       var hash = crypto.createHash('md5').update(password + username + 'cbzz!').digest('hex');
       var pwd = results[0]['password'];
+      console.log("hash  " + hash);
+      console.log("pwd  " + pwd);
       if (hash == pwd) {
-        // 计算token，存入数据库
-        var token = jwt.sign({ username }, 'jiami');   //{ expiresIn: '1s' }
-        var updateSql = `UPDATE profile SET \`token\` = '${token}' WHERE \`nickname\` = '${username}'`;
-        connection.query(updateSql, function (error, results, fields) {
-          if (error) throw error;
-          res.set('Authorization', `${token}`);
-          console.log('Authorization Header:', res.get('Authorization'));
-          res.send('login success.');
-        });
+        res.status(200).json({ success: true, message: 'Login successful.' });
       } else {
-        res.send('password wrong.');
+        res.status(400).json({ success: false, message: 'Incorrect password.' });
       }
     } else {
-      res.send('multi nickname!');
+      res.status(400).json({ success: false, message: 'Multiple nicknames found.' });
     }
   })
 })
