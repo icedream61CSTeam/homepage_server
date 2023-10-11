@@ -4,21 +4,20 @@ const cors = require('cors');
 const bodyParser = require('body-parser')
 const mysql = require('mysql2');
 const path = require('path');
+const usersRouter = require('./routes/users');
+const app = express();
 
-var app = express();
 
-var usersRouter = require('./routes/users');
-
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+//app.set('views', path.join(__dirname, 'views'));
+//app.set('view engine', 'jade');
 
 
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 
-//开始--------------
+
+//------------开始连接数据库--------------
 const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
@@ -26,7 +25,6 @@ const connection = mysql.createConnection({
   database: 'student'
 });
 connection.connect();
-app.use(bodyParser.urlencoded({ extended: false }));
 
 
 app.use('/users', usersRouter);

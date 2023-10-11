@@ -14,16 +14,12 @@
 
 1. 安装依赖
 
-​		分别在donation_api/和logIn_api/目录下
-
 ​		`npm install`
 
-2. 运行服务器
+2. 运行捐款者页面api
 
-​		在donation_api/目录下 
+​		`node donation.js`
 
-​		`node app.js`
+3. 运行用户登录api
 
-3. 在logIn_api/目录下
-
-   `npm run start` 
+     `npm run start` 
