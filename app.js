@@ -13,6 +13,7 @@ const app = express();
 
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());   //这一条不加，无法读取传来的post请求
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 
