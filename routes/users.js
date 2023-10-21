@@ -22,7 +22,7 @@ connection.connect((error) => {
     console.error('Error connecting to MySQL icedream61: ', error);
     return;
   }
-  console.log('连接数据库成功!');
+  console.log('连接icedream61数据库成功!');
 });
 
 
@@ -38,16 +38,13 @@ router.post('/register', function (req, res, next) {
   connection.query(sql, function (error, results, fields) {
     if (error) throw error;
     if (results.length == 0) {
-      console.log("username(注册)  " + username);
-      console.log("password(注册)  " + password);
       var hash = crypto.createHash('md5').update(password + username + 'cbzz!').digest('hex');
       var insertSql = `insert into basic_info (\`nickname\`, \`password\`) values ('${username}', '${hash}')`;
       connection.query(insertSql, function (err2, res2) {
         if (!err2) {
-          res.send('register success.');
+          res.status(200).json({ success: true, message: 'Register successful.' });
         } else {
-          console.log(`insert error: ${err2}`);
-          res.send('register failed.');
+          res.status(400).json({ success: false, message: `insert error: ${err2}` });
         }
       });
     } else {
@@ -66,12 +63,8 @@ router.post('/login', function (req, res, next) {
     if (results.length == 0) {
       res.send('no this nickname.');
     } else if (results.length == 1) {
-      console.log("username(登录)  " + username);
-      console.log("password(登录)  " + password);
       var hash = crypto.createHash('md5').update(password + username + 'cbzz!').digest('hex');
       var pwd = results[0]['password'];
-      console.log("hash  " + hash);
-      console.log("pwd  " + pwd);
       if (hash == pwd) {
         res.status(200).json({ success: true, message: 'Login successful.' });
       } else {
