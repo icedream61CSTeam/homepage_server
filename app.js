@@ -6,6 +6,7 @@ const mysql = require('mysql2');
 const path = require('path');
 const usersRouter = require('./routes/users');
 const app = express();
+require('dotenv').config();
 
 
 //app.set('views', path.join(__dirname, 'views'));
@@ -18,12 +19,14 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 
 
+const dbPassword = process.env.DB_PASSWORD;
+const dbHost = process.env.DB_HOST;
 //------------开始连接数据库--------------
 const connection = mysql.createConnection({
-  host: 'localhost',
+  host: dbHost,
   user: 'root',
-  password: '123456',
-  database: 'student'
+  password: dbPassword,
+  database: 'user_data'
 });
 connection.connect();
 

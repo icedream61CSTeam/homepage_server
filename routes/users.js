@@ -3,18 +3,23 @@ const router = express.Router();
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const mysql = require('mysql2');
+require('dotenv').config();
+
+
+const dbPassword = process.env.DB_PASSWORD;
+const dbHost = process.env.DB_HOST;
 
 
 const connection = mysql.createConnection({
-  host: 'localhost',
+  host: dbHost,
   user: 'root',
-  password: '123456',
-  database: 'student'
+  password: dbPassword,
+  database: 'user_data'
 });
 
 connection.connect((error) => {
   if (error) {
-    console.error('Error connecting to MySQL database: ', error);
+    console.error('Error connecting to MySQL icedream61: ', error);
     return;
   }
   console.log('连接数据库成功!');
@@ -29,14 +34,14 @@ router.get('/', function (req, res, next) {
 
 router.post('/register', function (req, res, next) {
   const { username, password } = req.body;
-  const sql = `select * from profile where nickname = '${username}'`;
+  const sql = `select * from basic_info  where nickname = '${username}'`;
   connection.query(sql, function (error, results, fields) {
     if (error) throw error;
     if (results.length == 0) {
       console.log("username(注册)  " + username);
       console.log("password(注册)  " + password);
       var hash = crypto.createHash('md5').update(password + username + 'cbzz!').digest('hex');
-      var insertSql = `insert into profile (\`nickname\`, \`password\`) values ('${username}', '${hash}')`;
+      var insertSql = `insert into basic_info (\`nickname\`, \`password\`) values ('${username}', '${hash}')`;
       connection.query(insertSql, function (err2, res2) {
         if (!err2) {
           res.send('register success.');
@@ -55,7 +60,7 @@ router.post('/register', function (req, res, next) {
 router.post('/login', function (req, res, next) {
   const { username, password } = req.body;
 
-  var sql = `select * from profile where nickname = '${username}'`;
+  var sql = `select * from basic_info where nickname = '${username}'`;
   connection.query(sql, function (error, results, fields) {
     if (error) throw error;
     if (results.length == 0) {
@@ -81,7 +86,7 @@ router.post('/login', function (req, res, next) {
 
 router.post('/logout', function (req, res) {
   // 清除数据库端的令牌
-  const updateSql = `UPDATE \`profile\` SET \`token\` = null WHERE \`nickname\` = '${global.username1}'`;
+  const updateSql = `UPDATE \`basic_info\` SET \`token\` = null WHERE \`nickname\` = '${global.username1}'`;
   console.log(global.username1 + ' 已经登出');
   connection.query(updateSql, function (error, results, fields) {
     if (error) throw error;
