@@ -4,11 +4,18 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const mysql = require('mysql2');
 require('dotenv').config();
+const session = require('express-session');
+const cors = require('cors');
 
 
 const dbPassword = process.env.DB_PASSWORD;
 const dbHost = process.env.DB_HOST;
-
+router.use(cors());
+router.use(session({
+  secret: 'your-secret-key', // 使用你自己的密钥
+  resave: false,
+  saveUninitialized: true
+}));
 
 const connection = mysql.createConnection({
   host: dbHost,
@@ -54,6 +61,9 @@ router.post('/register', function (req, res, next) {
   });
 });
 
+
+
+
 router.post('/login', function (req, res, next) {
   const { username, password } = req.body;
 
@@ -67,6 +77,8 @@ router.post('/login', function (req, res, next) {
       var pwd = results[0]['password'];
       if (hash == pwd) {
         res.status(200).json({ success: true, message: 'Login successful.' });
+        req.session.username = username; //储存username
+        console.log('登入后的log' + req.session.username)
       } else {
         res.status(400).json({ success: false, message: 'Incorrect password.' });
       }
@@ -87,6 +99,52 @@ router.post('/logout', function (req, res) {
     res.send('已经成功退出');
   });
 });
+
+router.post('/profile', (req, res) => {
+  const { username, gender, grade } = req.body;
+  // 将用户信息保存到数据库
+  connection.query(`UPDATE basic_info SET gender = '${gender}', grade = '${grade}' WHERE nickname = '${username}'`,
+    (err, result) => {
+      if (err) {
+        console.error(err);
+        res.status(500).json({ message: 'server保存用户信息失败' });
+      } else {
+        res.json({ message: '用户信息已保存' });
+      }
+    }
+  );
+});
+
+router.get('/profile', (req, res) => {
+  const { username } = req.session; // 获取存储在会话中的用户名
+  console.log("这个PROFILE GET的请求log--" + username)
+  if (username) {
+    // 获取用户信息
+    connection.query(
+      `SELECT gender, grade FROM basic_info WHERE nickname = '${username}'`,
+      (err, results) => {
+        if (err) {
+          console.error(err);
+          res.status(500).json({ message: 'server端获取用户信息失败' });
+        } else {
+          if (results.length > 0) {
+            const user = results[0];
+            res.json(user);
+            res.send("返回成功");
+          } else {
+            res.status(404).json({ message: '用户不存在' });
+          }
+        }
+      }
+    );
+  } else {
+    res.status(401).json({ message: '未登录' });
+  }
+});
+
+
+
+
 
 
 module.exports = router;
