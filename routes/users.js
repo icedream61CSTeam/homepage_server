@@ -4,18 +4,11 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const mysql = require('mysql2');
 require('dotenv').config();
-const session = require('express-session');
-const cors = require('cors');
 
 
 const dbPassword = process.env.DB_PASSWORD;
 const dbHost = process.env.DB_HOST;
-router.use(cors());
-router.use(session({
-  secret: 'your-secret-key', // 使用你自己的密钥
-  resave: false,
-  saveUninitialized: true
-}));
+
 
 const connection = mysql.createConnection({
   host: dbHost,
@@ -64,7 +57,7 @@ router.post('/register', function (req, res, next) {
 
 
 
-router.post('/login', function (req, res, next) {
+router.post('/login', function (req, res,) {
   const { username, password } = req.body;
 
   var sql = `select * from basic_info where nickname = '${username}'`;
@@ -76,9 +69,9 @@ router.post('/login', function (req, res, next) {
       var hash = crypto.createHash('md5').update(password + username + 'cbzz!').digest('hex');
       var pwd = results[0]['password'];
       if (hash == pwd) {
+        req.session.username = username;
         res.status(200).json({ success: true, message: 'Login successful.' });
-        req.session.username = username; //储存username
-        console.log('登入后的log' + req.session.username)
+        console.log('/loginPost.session=' + req.session.username)
       } else {
         res.status(400).json({ success: false, message: 'Incorrect password.' });
       }
@@ -87,18 +80,6 @@ router.post('/login', function (req, res, next) {
     }
   })
 })
-
-
-router.post('/logout', function (req, res) {
-  // 清除数据库端的令牌
-  const updateSql = `UPDATE \`basic_info\` SET \`token\` = null WHERE \`nickname\` = '${global.username1}'`;
-  console.log(global.username1 + ' 已经登出');
-  connection.query(updateSql, function (error, results, fields) {
-    if (error) throw error;
-    // 响应登出成功消息
-    res.send('已经成功退出');
-  });
-});
 
 router.post('/profile', (req, res) => {
   const { username, gender, grade } = req.body;
@@ -109,6 +90,8 @@ router.post('/profile', (req, res) => {
         console.error(err);
         res.status(500).json({ message: 'server保存用户信息失败' });
       } else {
+        req.session.username = username;
+        console.log("/profilePost.session=" + req.session.username)
         res.json({ message: '用户信息已保存' });
       }
     }
@@ -116,8 +99,9 @@ router.post('/profile', (req, res) => {
 });
 
 router.get('/profile', (req, res) => {
-  const { username } = req.session; // 获取存储在会话中的用户名
-  console.log("这个PROFILE GET的请求log--" + username)
+  const username = req.session.username;
+  // 获取存储在会话中的用户名 
+  console.log("/profileGET.session=" + username)
   if (username) {
     // 获取用户信息
     connection.query(
@@ -130,7 +114,6 @@ router.get('/profile', (req, res) => {
           if (results.length > 0) {
             const user = results[0];
             res.json(user);
-            res.send("返回成功");
           } else {
             res.status(404).json({ message: '用户不存在' });
           }
@@ -142,6 +125,21 @@ router.get('/profile', (req, res) => {
   }
 });
 
+
+router.post('/hh', (req, res) => {
+  const { username } = req.body;
+  req.session.username = username
+  res.status(200).json({ message: 'Login successful.' });
+  console.log("hhPost--session.username=" + req.session.username);
+});
+
+router.get('/hh12', (req, res) => {
+  const name = req.session.username
+  if (name) {
+    console.log("hhGet--session.username=" + name);
+    res.send("good")
+  }
+});
 
 
 

@@ -1,12 +1,21 @@
-const createError = require('http-errors');
 const express = require('express');
-const cors = require('cors');
+const createError = require('http-errors');
+const usersRouter = require('./routes/users');
 const bodyParser = require('body-parser')
 const mysql = require('mysql2');
 const path = require('path');
-const usersRouter = require('./routes/users');
-const app = express();
+const cors = require('cors');
 require('dotenv').config();
+const app = express();
+const session = require('express-session');
+
+app.use(session({
+  secret: 'your-secret-key', // 使用你自己的密钥
+  resave: false,
+  saveUninitialized: true,
+
+}));
+
 
 
 app.set('views', path.join(__dirname, 'views'));
@@ -17,54 +26,22 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());   //这一条不加，无法读取传来的post请求
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
-
-
-const dbPassword = process.env.DB_PASSWORD;
-const dbHost = process.env.DB_HOST;
-//------------开始连接数据库--------------
-const connection = mysql.createConnection({
-  host: dbHost,
-  user: 'root',
-  password: dbPassword,
-  database: 'user_data'
-});
-connection.connect();
-
-
 app.use('/users', usersRouter);
 
 
-app.get('/users/test', (req, res) => {
-  const headers = req.headers;
-  const token = headers['authorization'].split(' ')[1];
-
-  if (!token) {
-    // 如果请求中没有提供令牌，则返回未授权状态
-    return res.status(401).send('没有token,无法访问');
+app.get('/example', (req, res) => {
+  if (req.session) {
+    req.session.id = 1;
+    // 会话已启用
+    // 可以访问 req.session 中的数据
+    console.log("example--" + req.session.id);
+    res.send("good")
+  } else {
+    // 会话未启用
   }
-  // 从数据库中获取对应用户的令牌
-  connection.query(
-    `SELECT \`token\` FROM \`profile\` WHERE \`nickname\` = '${global.username1}'`,
-    (err, results) => {
-      if (err) {
-        return res.status(500).send('数据库查询错误');
-      }
-
-      if (results.length === 0) {
-        return res.status(403).send('数据库查询不到该用户名');
-      }
-
-      const dbToken = results[0].token;
-
-      // 检查令牌是否匹配
-      if (token !== dbToken) {
-        return res.status(403).send('token不匹配,验证失败');
-      }
-
-      res.send('token匹配成功!只有登陆成功后才能看到此消息!');
-    }
-  );
 });
+
+
 
 
 // catch 404 and forward to error handler  以下是报错信息
