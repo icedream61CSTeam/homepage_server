@@ -10,7 +10,9 @@ const app = express();
 const session = require('express-session');
 
 app.use(session({
-  secret: 'your-secret-key', // 使用你自己的密钥
+  secret: '签名', // 给session ID cookie 签名
+  name: 'user_login', //默认是connect.sid
+  cookie: { maxAge: 15000 },
   resave: false,
   saveUninitialized: true,
 
@@ -29,17 +31,7 @@ app.use(cors());
 app.use('/users', usersRouter);
 
 
-app.get('/example', (req, res) => {
-  if (req.session) {
-    req.session.id = 1;
-    // 会话已启用
-    // 可以访问 req.session 中的数据
-    console.log("example--" + req.session.id);
-    res.send("good")
-  } else {
-    // 会话未启用
-  }
-});
+
 
 
 

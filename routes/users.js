@@ -8,6 +8,7 @@ require('dotenv').config();
 
 const dbPassword = process.env.DB_PASSWORD;
 const dbHost = process.env.DB_HOST;
+var session_DB;
 
 
 const connection = mysql.createConnection({
@@ -59,7 +60,8 @@ router.post('/register', function (req, res, next) {
 
 router.post('/login', function (req, res,) {
   const { username, password } = req.body;
-
+  //req.session.username = username;
+  //console.log("63行=" + req.session.username)
   var sql = `select * from basic_info where nickname = '${username}'`;
   connection.query(sql, function (error, results, fields) {
     if (error) throw error;
@@ -69,9 +71,13 @@ router.post('/login', function (req, res,) {
       var hash = crypto.createHash('md5').update(password + username + 'cbzz!').digest('hex');
       var pwd = results[0]['password'];
       if (hash == pwd) {
-        req.session.username = username;
+        session_DB = req.session;
+        session_DB.username = username;
+
         res.status(200).json({ success: true, message: 'Login successful.' });
-        console.log('/loginPost.session=' + req.session.username)
+        console.log('77行=' + session_DB.username)
+
+
       } else {
         res.status(400).json({ success: false, message: 'Incorrect password.' });
       }
@@ -79,6 +85,7 @@ router.post('/login', function (req, res,) {
       res.status(400).json({ success: false, message: 'Multiple nicknames found.' });
     }
   })
+  //
 })
 
 router.post('/profile', (req, res) => {
@@ -99,13 +106,16 @@ router.post('/profile', (req, res) => {
 });
 
 router.get('/profile', (req, res) => {
-  const username = req.session.username;
+
+  const sessionJSON = JSON.stringify(req.session);
+  console.log('110行=' + sessionJSON)
+
   // 获取存储在会话中的用户名 
-  console.log("/profileGET.session=" + username)
-  if (username) {
+  console.log("/profileGET.session=" + session_DB.username)
+  if (session_DB.username) {
     // 获取用户信息
     connection.query(
-      `SELECT gender, grade FROM basic_info WHERE nickname = '${username}'`,
+      `SELECT gender, grade FROM basic_info WHERE nickname = '${session_DB.username}'`,
       (err, results) => {
         if (err) {
           console.error(err);
@@ -113,6 +123,7 @@ router.get('/profile', (req, res) => {
         } else {
           if (results.length > 0) {
             const user = results[0];
+            //res.header("Content-Type", "application/json");   
             res.json(user);
           } else {
             res.status(404).json({ message: '用户不存在' });
@@ -134,10 +145,11 @@ router.post('/hh', (req, res) => {
 });
 
 router.get('/hh12', (req, res) => {
+  console.log("req.session11=" + req.session)
   const name = req.session.username
   if (name) {
     console.log("hhGet--session.username=" + name);
-    res.send("good")
+    res.json(req.session);
   }
 });
 
