@@ -1,3 +1,4 @@
+//引入模块
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
@@ -6,6 +7,7 @@ const mysql = require('mysql2');
 require('dotenv').config();
 
 
+//设置变量
 const dbPassword = process.env.DB_PASSWORD;
 const dbHost = process.env.DB_HOST;
 var session_DB;
@@ -27,12 +29,7 @@ connection.connect((error) => {
 });
 
 
-/*GET users listing. */
-router.get('/', function (req, res, next) {
-  res.sendFile('views/users.html', { root: process.cwd() });
-});
-
-
+//注册
 router.post('/register', function (req, res, next) {
   const { username, password } = req.body;
   const sql = `select * from basic_info  where nickname = '${username}'`;
@@ -56,13 +53,10 @@ router.post('/register', function (req, res, next) {
 });
 
 
-
-
+//登录
 router.post('/login', function (req, res,) {
   const { username, password } = req.body;
-  //req.session.username = username;
-  //console.log("63行=" + req.session.username)
-  var sql = `select * from basic_info where nickname = '${username}'`;
+  const sql = `select * from basic_info where nickname = '${username}'`;
   connection.query(sql, function (error, results, fields) {
     if (error) throw error;
     if (results.length == 0) {
@@ -73,21 +67,20 @@ router.post('/login', function (req, res,) {
       if (hash == pwd) {
         session_DB = req.session;
         session_DB.username = username;
-
         res.status(200).json({ success: true, message: 'Login successful.' });
         console.log('77行=' + session_DB.username)
-
-
       } else {
-        res.status(400).json({ success: false, message: 'Incorrect password.' });
+        res.status(200).json({ success: false, message: 'Incorrect password.' });
       }
     } else {
-      res.status(400).json({ success: false, message: 'Multiple nicknames found.' });
+      res.status(200).json({ success: false, message: 'Multiple nicknames found.' });
     }
   })
   //
 })
 
+
+//用户页面 编辑信息
 router.post('/profile', (req, res) => {
   const { username, gender, grade } = req.body;
   // 将用户信息保存到数据库
@@ -105,10 +98,11 @@ router.post('/profile', (req, res) => {
   );
 });
 
-router.get('/profile', (req, res) => {
 
-  const sessionJSON = JSON.stringify(req.session);
-  console.log('110行=' + sessionJSON)
+//用户页面显示数据
+router.get('/profile', (req, res) => {
+  const sessionJSON2 = JSON.stringify(session_DB);
+  console.log('114行=' + sessionJSON2)
 
   // 获取存储在会话中的用户名 
   console.log("/profileGET.session=" + session_DB.username)
@@ -135,26 +129,6 @@ router.get('/profile', (req, res) => {
     res.status(401).json({ message: '未登录' });
   }
 });
-
-
-router.post('/hh', (req, res) => {
-  const { username } = req.body;
-  req.session.username = username
-  res.status(200).json({ message: 'Login successful.' });
-  console.log("hhPost--session.username=" + req.session.username);
-});
-
-router.get('/hh12', (req, res) => {
-  console.log("req.session11=" + req.session)
-  const name = req.session.username
-  if (name) {
-    console.log("hhGet--session.username=" + name);
-    res.json(req.session);
-  }
-});
-
-
-
 
 
 module.exports = router;

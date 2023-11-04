@@ -9,17 +9,18 @@ require('dotenv').config();
 const app = express();
 const session = require('express-session');
 
+
 app.use(session({
   secret: '签名', // 给session ID cookie 签名
   name: 'user_login', //默认是connect.sid
-  cookie: { maxAge: 15000 },
+  //cookie: { maxAge: 15000 },  时间
   resave: false,
   saveUninitialized: true,
 
 }));
 
 
-
+//中间件使用
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
@@ -27,8 +28,8 @@ app.set('view engine', 'jade');
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());   //这一条不加，无法读取传来的post请求
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cors());
-app.use('/users', usersRouter);
+app.use(cors())
+app.use('/users', usersRouter); //user.js部分
 
 
 
@@ -40,6 +41,7 @@ app.use('/users', usersRouter);
 app.use(function (req, res, next) {
   next(createError(404));
 });
+
 
 // error handler
 app.use(function (err, req, res, next) {
